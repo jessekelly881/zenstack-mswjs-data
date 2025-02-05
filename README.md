@@ -1,4 +1,4 @@
-# ZenStack Effect Plugin
+# ZenStack MSW Data Plugin
 
 ## Usage
 
@@ -7,7 +7,7 @@ pnpm add zenstack-msw-data
 ```
 
 ```zmodel
-plugin effect {
+plugin msw {
     provider = 'zenstack-msw-data'
 }
 ```
