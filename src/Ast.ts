@@ -1,36 +1,37 @@
 import { Model } from "@zenstackhq/sdk/ast";
 import ts, { factory } from "typescript";
 
-
-export const databaseFileAst = (model: Model) => {
-	console.log(model.imports[0].path);
-	return [
-		factory.createImportDeclaration(
-			undefined,
-			factory.createImportClause(
+const importAst = factory.createImportDeclaration(
+	undefined,
+	factory.createImportClause(
+		false,
+		undefined,
+		factory.createNamedImports([
+			factory.createImportSpecifier(
 				false,
 				undefined,
-				factory.createNamedImports([
-					factory.createImportSpecifier(
-						false,
-						undefined,
-						factory.createIdentifier("factory")
-					),
-					factory.createImportSpecifier(
-						false,
-						undefined,
-						factory.createIdentifier("nullable")
-					),
-					factory.createImportSpecifier(
-						false,
-						undefined,
-						factory.createIdentifier("primaryKey")
-					)
-				])
+				factory.createIdentifier("factory")
 			),
-			factory.createStringLiteral("@mswjs/data"),
-			undefined
-		),
+			factory.createImportSpecifier(
+				false,
+				undefined,
+				factory.createIdentifier("nullable")
+			),
+			factory.createImportSpecifier(
+				false,
+				undefined,
+				factory.createIdentifier("primaryKey")
+			)
+		])
+	),
+	factory.createStringLiteral("@mswjs/data"),
+	undefined
+)
+
+export const databaseFileAst = (model: Model) => {
+	console.log(model.imports.length);
+	return [
+		importAst,
 		factory.createVariableStatement(
 			[factory.createToken(ts.SyntaxKind.ExportKeyword)],
 			factory.createVariableDeclarationList(
@@ -42,12 +43,21 @@ export const databaseFileAst = (model: Model) => {
 						factory.createIdentifier("factory"),
 						undefined,
 						[factory.createObjectLiteralExpression(
-							[],
+							[factory.createPropertyAssignment(
+								factory.createIdentifier("i"),
+								factory.createObjectLiteralExpression(
+									[factory.createPropertyAssignment(
+										factory.createIdentifier("a"),
+										factory.createIdentifier("Number")
+									)],
+									true
+								)
+							)],
 							true
 						)]
 					)
 				)],
-				ts.NodeFlags.Const | ts.NodeFlags.Constant | ts.NodeFlags.Constant
+				ts.NodeFlags.Const
 			)
 		)
 	];

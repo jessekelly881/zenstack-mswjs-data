@@ -13,11 +13,10 @@ export const layer = Layer.effect(Generator, Effect.gen(function* () {
 	const path = yield* Path.Path
 
 	const runCodegen = (model: Model, outputDirectory: string) => Effect.gen(function* () {
-		const modelsDirPath = path.join(outputDirectory, "models");
-		yield* fs.makeDirectory(modelsDirPath, { recursive: true });
+		yield* fs.makeDirectory(outputDirectory, { recursive: true });
 
 		yield* fs.writeFileString(
-			path.join(modelsDirPath, "index.ts"),
+			path.join(outputDirectory, "index.ts"),
 			Ast.astToString(Ast.databaseFileAst(model))
 		);
 	})
