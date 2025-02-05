@@ -1,6 +1,8 @@
-import { Model } from "@zenstackhq/sdk/ast";
+import { BuiltinType, DataModelField, isDataModel, Model } from "@zenstackhq/sdk/ast";
+import { Match } from "effect";
 import ts, { factory } from "typescript";
 
+/** @internal */
 const importAst = factory.createImportDeclaration(
 	undefined,
 	factory.createImportClause(
@@ -28,8 +30,34 @@ const importAst = factory.createImportDeclaration(
 	undefined
 )
 
+export const builtInTypeAst = Match.type<BuiltinType>().pipe(
+	Match.when("BigInt", () => factory.createIdentifier("Number")), // hmm... :( ??????
+	Match.when("Boolean", () => factory.createIdentifier("Boolean")),
+	Match.when("Int", () => factory.createIdentifier("Number")),
+	Match.when("Float", () => factory.createIdentifier("Number")),
+	Match.when("String", () => factory.createIdentifier("String")),
+	Match.when("Json", () => factory.createIdentifier("Object")),
+	Match.when("DateTime", () => factory.createIdentifier("Date")),
+	Match.when("Decimal", () => factory.createIdentifier("Number")),
+	Match.when("Bytes", () => factory.createIdentifier("String")), // hmm... :( ??????
+	Match.exhaustive
+)
+
+/** @internal */
+const fieldAst = (field: DataModelField) => {
+	const { type } = field.type
+	if (type) {
+		return builtInTypeAst(type)
+	}
+
+	else return factory.createIdentifier("Object")
+
+};
+
 export const databaseFileAst = (model: Model) => {
 	console.log(model.imports.length);
+	const dataModels = model.declarations.filter(isDataModel);
+
 	return [
 		importAst,
 		factory.createVariableStatement(
@@ -43,16 +71,17 @@ export const databaseFileAst = (model: Model) => {
 						factory.createIdentifier("factory"),
 						undefined,
 						[factory.createObjectLiteralExpression(
-							[factory.createPropertyAssignment(
-								factory.createIdentifier("i"),
+							dataModels.map(dm => factory.createPropertyAssignment(
+								factory.createIdentifier(dm.name),
 								factory.createObjectLiteralExpression(
-									[factory.createPropertyAssignment(
-										factory.createIdentifier("a"),
-										factory.createIdentifier("Number")
-									)],
+									dm.fields.map(field =>
+										factory.createPropertyAssignment(
+											factory.createIdentifier(field.name),
+											fieldAst(field)
+										)),
 									true
 								)
-							)],
+							)),
 							true
 						)]
 					)
