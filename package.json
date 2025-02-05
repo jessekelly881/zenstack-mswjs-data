@@ -1,0 +1,57 @@
+{
+  "name": "zenstack-effect",
+  "displayName": "Effect Schema Generator",
+  "version": "0.0.3",
+  "description": "Generate Effect Schemas from ZenStack",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jessekelly881/zenstack-effect"
+  },
+  "publishConfig": {
+    "directory": "dist",
+    "linkDirectory": true
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run lint && npm run clean && tsc && copyfiles ./package.json ./README.md ./README-1.svg ./README-2.svg ./LICENSE ./static/* dist",
+    "dev": "zenstack generate --output codegen --no-compile",
+    "watch": "tsc --watch",
+    "lint": "eslint src",
+    "check": "tsc --project tsconfig.json --noEmit --downlevelIteration",
+    "test": "ts-node test.ts"
+  },
+  "author": "Jesse Kelly",
+  "license": "MIT",
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.6",
+    "@ai-sdk/openai": "^1.0.9",
+    "@ai-sdk/xai": "^1.0.5",
+    "@changesets/cli": "^2.27.11",
+    "@effect/platform": "^0.75.1",
+    "@effect/platform-node": "^0.71.1",
+    "@prisma/generator-helper": "^6.2.1",
+    "@zenstackhq/runtime": "^2.10.0",
+    "@zenstackhq/sdk": "^2.10.0",
+    "ai": "^4.0.12",
+    "dotenv": "^16.4.7",
+    "effect": "^3.12.1",
+    "typescript": "^5.7.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.19.0",
+    "@prisma/client": "^6.2.1",
+    "@types/node": "^22.10.6",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "copyfiles": "^2.4.1",
+    "cpx": "^1.5.0",
+    "eslint": "^9.19.0",
+    "prisma": "^6.2.1",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.1",
+    "zenstack": "^2.10.0"
+  }
+}
