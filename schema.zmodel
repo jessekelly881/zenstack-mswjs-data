@@ -11,10 +11,10 @@ generator client {
     previewFeatures = []
 }
 
-plugin effect {
+plugin msw {
     provider = "./dist/index.js"
     debug = true
-    output = "codegen"
+    output = "codegen/msw-data"
 }
 
 enum SchedulingType {

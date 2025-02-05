@@ -13,7 +13,7 @@ import * as Generator from "./Generator";
 config();
 
 export const name = 'ZenStack Effect Schema';
-export const description = 'Generate Effect Schemas from ZenStack';
+export const description = 'Generate MSW Data models from ZenStack';
 
 export function getNodeModulesFolder(startPath?: string): string | undefined {
     startPath = startPath ?? process.cwd();
@@ -59,16 +59,16 @@ export function getDefaultOutputFolder(globalOptions?: PluginGlobalOptions) {
 const run = (model: Model, options: PluginOptions, dmmf: DMMF.Document, globalOptions: PluginGlobalOptions) => Effect.gen(function* () {
     const path = yield* Path.Path;
     const generator = yield* Generator.Generator;
-    const isDisabled = yield* Config.boolean("DISABLE_ZENSTACK_EFFECT").pipe(Config.withDefault(false)) // todo! include options.disable
+    const isDisabled = yield* Config.boolean("DISABLE_ZENSTACK_MSWDATA").pipe(Config.withDefault(false)) // todo! include options.disable
     if (isDisabled) { return }
 
     let output = options.output as string;
     if (!output) {
         const defaultOutputFolder = getDefaultOutputFolder(globalOptions);
         if (defaultOutputFolder) {
-            output = path.join(defaultOutputFolder, 'effect');
+            output = path.join(defaultOutputFolder, 'msw-data');
         } else {
-            output = './generated/effect';
+            output = './generated/msw-data';
         }
     }
 

@@ -3,11 +3,11 @@
 ## Usage
 
 ```bash
-pnpm add zenstack-effect
+pnpm add zenstack-msw-data
 ```
 
 ```zmodel
 plugin effect {
-    provider = 'zenstack-effect'
+    provider = 'zenstack-msw-data'
 }
 ```
