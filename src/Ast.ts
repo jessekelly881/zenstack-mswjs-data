@@ -3,37 +3,48 @@ import { Match } from "effect";
 import ts, { factory } from "typescript";
 
 /** @internal */
-const importAst = factory.createImportDeclaration(
-	undefined,
-	factory.createImportClause(
-		false,
+const imports = [
+	factory.createImportDeclaration(
 		undefined,
-		factory.createNamedImports([
-			factory.createImportSpecifier(
-				false,
-				undefined,
-				factory.createIdentifier("factory")
-			),
-			factory.createImportSpecifier(
-				false,
-				undefined,
-				factory.createIdentifier("nullable")
-			),
-			factory.createImportSpecifier(
-				false,
-				undefined,
-				factory.createIdentifier("primaryKey")
-			),
-			factory.createImportSpecifier(
-				false,
-				undefined,
-				factory.createIdentifier("oneOf")
-			)
-		])
+		factory.createImportClause(
+			false,
+			undefined,
+			factory.createNamedImports([
+				factory.createImportSpecifier(
+					false,
+					undefined,
+					factory.createIdentifier("nullable")
+				),
+				factory.createImportSpecifier(
+					false,
+					undefined,
+					factory.createIdentifier("primaryKey")
+				),
+				factory.createImportSpecifier(
+					false,
+					undefined,
+					factory.createIdentifier("oneOf")
+				)
+			])
+		),
+		factory.createStringLiteral("@mswjs/data"),
+		undefined
 	),
-	factory.createStringLiteral("@mswjs/data"),
-	undefined
-)
+	factory.createImportDeclaration(
+		undefined,
+		factory.createImportClause(
+			false,
+			undefined,
+			factory.createNamedImports([factory.createImportSpecifier(
+				false,
+				undefined,
+				factory.createIdentifier("ModelDictionary")
+			)])
+		),
+		factory.createStringLiteral("@mswjs/data/lib/glossary"),
+		undefined
+	)
+]
 
 export const builtInTypeAst = Match.type<BuiltinType>().pipe(
 	Match.when("BigInt", () => factory.createIdentifier("Number")), // hmm... :( ??????
@@ -95,36 +106,45 @@ const fieldAst = (field: DataModelField) => {
 export const databaseFileAst = (model: Model) => {
 	const dataModels = model.declarations.filter(isDataModel);
 
+	const dictObjAst = factory.createObjectLiteralExpression(
+		dataModels.map(dm => factory.createPropertyAssignment(
+			factory.createIdentifier(dm.name),
+			factory.createObjectLiteralExpression(
+				dm.fields.map(field =>
+					factory.createPropertyAssignment(
+						factory.createIdentifier(field.name),
+						fieldAst(field)
+					)),
+				true
+			)
+		)),
+		true
+	)
+
 	return [
-		importAst,
+		...imports,
 		factory.createVariableStatement(
-			[factory.createToken(ts.SyntaxKind.ExportKeyword)],
+			undefined,
 			factory.createVariableDeclarationList(
 				[factory.createVariableDeclaration(
-					factory.createIdentifier("db"),
+					factory.createIdentifier("dictionary"),
 					undefined,
 					undefined,
-					factory.createCallExpression(
-						factory.createIdentifier("factory"),
-						undefined,
-						[factory.createObjectLiteralExpression(
-							dataModels.map(dm => factory.createPropertyAssignment(
-								factory.createIdentifier(dm.name),
-								factory.createObjectLiteralExpression(
-									dm.fields.map(field =>
-										factory.createPropertyAssignment(
-											factory.createIdentifier(field.name),
-											fieldAst(field)
-										)),
-									true
-								)
-							)),
-							true
-						)]
+					factory.createSatisfiesExpression(
+						dictObjAst,
+						factory.createTypeReferenceNode(
+							factory.createIdentifier("ModelDictionary"),
+							undefined
+						)
 					)
 				)],
 				ts.NodeFlags.Const
 			)
+		),
+		factory.createExportAssignment(
+			undefined,
+			undefined,
+			factory.createIdentifier("dictionary")
 		)
 	];
 }
