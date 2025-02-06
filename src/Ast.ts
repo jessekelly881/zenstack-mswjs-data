@@ -67,8 +67,6 @@ const imports = [
 	)
 ]
 
-
-
 export const enumAst = (e: Enum) => factory.createVariableStatement(
 	undefined,
 	factory.createVariableDeclarationList(
@@ -108,44 +106,121 @@ export const enumAst = (e: Enum) => factory.createVariableStatement(
 	)
 )
 
-const dateAst = factory.createArrowFunction(
-	undefined,
-	undefined,
-	[],
-	undefined,
-	factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-	factory.createCallExpression(
-		factory.createPropertyAccessExpression(
-			factory.createPropertyAccessExpression(
-				factory.createIdentifier("faker"),
-				factory.createIdentifier("date")
-			),
-			factory.createIdentifier("anytime")
-		),
-		undefined,
-		[]
-	)
-)
+// faker.date.anytime()
+const fakerDateAst = factory.createCallExpression(factory.createPropertyAccessExpression(
+	factory.createPropertyAccessExpression(
+		factory.createIdentifier("faker"),
+		factory.createIdentifier("date")
+	),
+	factory.createIdentifier("anytime")
+), undefined, [])
+
+// faker.date.float()
+const fakerFloatAst = factory.createCallExpression(factory.createPropertyAccessExpression(
+	factory.createPropertyAccessExpression(
+		factory.createIdentifier("faker"),
+		factory.createIdentifier("number")
+	),
+	factory.createIdentifier("float")
+), undefined, [])
+
+const fakerBigIntAst = factory.createCallExpression(factory.createPropertyAccessExpression(
+	factory.createPropertyAccessExpression(
+		factory.createIdentifier("faker"),
+		factory.createIdentifier("number")
+	),
+	factory.createIdentifier("bigInt")
+), undefined, [])
+
+const fakerBooleanAst = factory.createCallExpression(factory.createPropertyAccessExpression(
+	factory.createPropertyAccessExpression(
+		factory.createIdentifier("faker"),
+		factory.createIdentifier("datatype")
+	),
+	factory.createIdentifier("boolean")
+), undefined, [])
+
+const fakerStringAst = factory.createCallExpression(factory.createPropertyAccessExpression(
+	factory.createPropertyAccessExpression(
+		factory.createIdentifier("faker"),
+		factory.createIdentifier("lorem")
+	),
+	factory.createIdentifier("sentence")
+), undefined, [])
+
+const fakerIntAst = factory.createCallExpression(factory.createPropertyAccessExpression(
+	factory.createPropertyAccessExpression(
+		factory.createIdentifier("faker"),
+		factory.createIdentifier("number")
+	),
+	factory.createIdentifier("int")
+), undefined, [])
+
 export const builtInTypeAst = Match.type<BuiltinType>().pipe(
-	Match.when("BigInt", () => factory.createIdentifier("Number")), // hmm... :( ??????
-	Match.when("Boolean", () => factory.createIdentifier("Boolean")),
-	Match.when("Int", () => factory.createIdentifier("Number")),
-	Match.when("Float", () => factory.createIdentifier("Number")),
-	Match.when("String", () => factory.createIdentifier("String")),
-	Match.when("Json", () => factory.createIdentifier("Object")),
-	Match.when("DateTime", () => dateAst),
-	Match.when("Decimal", () => factory.createIdentifier("Number")),
-	Match.when("Bytes", () => factory.createIdentifier("Object")), // hmm... :( ??????
+	Match.when("BigInt", () => fakerBigIntAst),
+	Match.when("Boolean", () => fakerBooleanAst),
+	Match.when("Int", () => fakerIntAst),
+	Match.when("Float", () => fakerFloatAst),
+	Match.when("String", () => fakerStringAst),
+	Match.when("Json", () => fakerStringAst), // hmm... :( ??????
+	Match.when("DateTime", () => fakerDateAst),
+	Match.when("Decimal", () => fakerFloatAst),
+	Match.when("Bytes", () => fakerStringAst), // hmm... :( ??????
 	Match.exhaustive
 )
 
+// const s = () => Array.from({ length: faker.number.int() }, () => faker.lorem.sentence());
+
 /** @internal */
 const fieldAst = (field: DataModelField) => {
-	let fieldAst: ts.Expression;
+	let fieldAst: ts.Expression | undefined;
 	const type = field.type
 
 	if (type.type) {
-		fieldAst = builtInTypeAst(type.type)
+		fieldAst = factory.createArrowFunction(
+			undefined,
+			undefined,
+			[],
+			undefined,
+			factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+			type.array ? factory.createCallExpression(
+				factory.createPropertyAccessExpression(
+					factory.createIdentifier("Array"),
+					factory.createIdentifier("from")
+				),
+				undefined,
+				[
+					factory.createObjectLiteralExpression(
+						[factory.createPropertyAssignment(
+							factory.createIdentifier("length"),
+							factory.createCallExpression(
+								factory.createPropertyAccessExpression(
+									factory.createPropertyAccessExpression(
+										factory.createIdentifier("faker"),
+										factory.createIdentifier("number")
+									),
+									factory.createIdentifier("int")
+								),
+								undefined,
+								[]
+							)
+						)],
+						false
+					),
+					factory.createArrowFunction(
+						undefined,
+						undefined,
+						[],
+						undefined,
+						factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+						builtInTypeAst(type.type)
+					)
+				]
+			)
+				: builtInTypeAst(type.type)
+		)
+
+
 	}
 
 	else if (field.type.reference?.ref) {
@@ -166,8 +241,10 @@ const fieldAst = (field: DataModelField) => {
 		}
 	}
 
-	// if its nothing else, its an object. the js way.
-	fieldAst ??= factory.createIdentifier("Object");
+	// ??
+	if (!fieldAst) {
+		throw "Field could not assigned"
+	}
 
 	if (type.optional) {
 		fieldAst = factory.createCallExpression(
