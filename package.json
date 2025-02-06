@@ -1,7 +1,7 @@
 {
   "name": "zenstack-msw-data",
   "displayName": "Zenstack MSW Factory Generator",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Generate MSW Data factories from ZenStack",
   "main": "index.js",
   "repository": {
