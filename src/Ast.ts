@@ -1,4 +1,4 @@
-import { BuiltinType, DataModelField, isDataModel, isEnum, Model } from "@zenstackhq/sdk/ast";
+import { BuiltinType, DataModelField, Enum, isDataModel, isEnum, Model } from "@zenstackhq/sdk/ast";
 import { Match } from "effect";
 import ts, { factory } from "typescript";
 
@@ -19,6 +19,11 @@ const imports = [
 					false,
 					undefined,
 					factory.createIdentifier("primaryKey")
+				),
+				factory.createImportSpecifier(
+					false,
+					undefined,
+					factory.createIdentifier("identity")
 				),
 				factory.createImportSpecifier(
 					false,
@@ -62,6 +67,43 @@ const imports = [
 	)
 ]
 
+export const enumAst = (e: Enum) => factory.createVariableStatement(
+	undefined,
+	factory.createVariableDeclarationList(
+		[factory.createVariableDeclaration(
+			factory.createIdentifier(e.name),
+			undefined,
+			undefined,
+			factory.createCallExpression(
+				factory.createIdentifier("identity"),
+				undefined,
+				[factory.createCallExpression(
+					factory.createPropertyAccessExpression(
+						factory.createPropertyAccessExpression(
+							factory.createIdentifier("faker"),
+							factory.createIdentifier("helpers")
+						),
+						factory.createIdentifier("arrayElement")
+					),
+					undefined,
+					[factory.createAsExpression(
+						factory.createArrayLiteralExpression(
+							e.fields.map(f => factory.createStringLiteral(f.name)),
+							false
+						),
+						factory.createTypeReferenceNode(
+							factory.createIdentifier("const"),
+							undefined
+						)
+					)]
+				)]
+			)
+		)],
+		ts.NodeFlags.Const
+	)
+)
+
+
 export const builtInTypeAst = Match.type<BuiltinType>().pipe(
 	Match.when("BigInt", () => factory.createIdentifier("Number")), // hmm... :( ??????
 	Match.when("Boolean", () => factory.createIdentifier("Boolean")),
@@ -87,7 +129,7 @@ const fieldAst = (field: DataModelField) => {
 	else if (field.type.reference?.ref) {
 		const ref = field.type.reference.ref
 		if (isEnum(ref)) { // ?? just use string here? ??
-			fieldAst = factory.createIdentifier("String")
+			fieldAst = factory.createIdentifier(ref.name)
 		}
 		if (isDataModel(ref)) {
 			fieldAst = factory.createCallExpression(
@@ -121,6 +163,7 @@ const fieldAst = (field: DataModelField) => {
 
 export const databaseFileAst = (model: Model) => {
 	const dataModels = model.declarations.filter(isDataModel);
+	const enums = model.declarations.filter(isEnum);
 
 	const dictObjAst = factory.createObjectLiteralExpression(
 		dataModels.map(dm => factory.createPropertyAssignment(
@@ -137,8 +180,10 @@ export const databaseFileAst = (model: Model) => {
 		true
 	)
 
+
 	return [
 		...imports,
+		...enums.map(enumAst),
 		factory.createVariableStatement(
 			undefined,
 			factory.createVariableDeclarationList(

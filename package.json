@@ -1,7 +1,7 @@
 {
   "name": "zenstack-msw-data",
   "displayName": "Zenstack MSW Factory Generator",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Generate MSW Data factories from ZenStack",
   "main": "index.js",
   "repository": {
@@ -42,6 +42,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.19.0",
+    "@faker-js/faker": "^9.4.0",
     "@mswjs/data": "^0.16.2",
     "@prisma/client": "^6.2.1",
     "@types/node": "^22.10.6",
