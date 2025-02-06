@@ -23,7 +23,7 @@ const imports = [
 				factory.createImportSpecifier(
 					false,
 					undefined,
-					factory.createIdentifier("identity")
+					factory.createIdentifier("manyOf")
 				),
 				factory.createImportSpecifier(
 					false,
@@ -67,6 +67,8 @@ const imports = [
 	)
 ]
 
+
+
 export const enumAst = (e: Enum) => factory.createVariableStatement(
 	undefined,
 	factory.createVariableDeclarationList(
@@ -74,10 +76,13 @@ export const enumAst = (e: Enum) => factory.createVariableStatement(
 			factory.createIdentifier(e.name),
 			undefined,
 			undefined,
-			factory.createCallExpression(
-				factory.createIdentifier("identity"),
+			factory.createArrowFunction(
 				undefined,
-				[factory.createCallExpression(
+				undefined,
+				[],
+				undefined,
+				factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+				factory.createCallExpression(
 					factory.createPropertyAccessExpression(
 						factory.createPropertyAccessExpression(
 							factory.createIdentifier("faker"),
@@ -96,14 +101,31 @@ export const enumAst = (e: Enum) => factory.createVariableStatement(
 							undefined
 						)
 					)]
-				)]
+				)
 			)
 		)],
 		ts.NodeFlags.Const
 	)
 )
 
-
+const dateAst = factory.createArrowFunction(
+	undefined,
+	undefined,
+	[],
+	undefined,
+	factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+	factory.createCallExpression(
+		factory.createPropertyAccessExpression(
+			factory.createPropertyAccessExpression(
+				factory.createIdentifier("faker"),
+				factory.createIdentifier("date")
+			),
+			factory.createIdentifier("anytime")
+		),
+		undefined,
+		[]
+	)
+)
 export const builtInTypeAst = Match.type<BuiltinType>().pipe(
 	Match.when("BigInt", () => factory.createIdentifier("Number")), // hmm... :( ??????
 	Match.when("Boolean", () => factory.createIdentifier("Boolean")),
@@ -111,22 +133,7 @@ export const builtInTypeAst = Match.type<BuiltinType>().pipe(
 	Match.when("Float", () => factory.createIdentifier("Number")),
 	Match.when("String", () => factory.createIdentifier("String")),
 	Match.when("Json", () => factory.createIdentifier("Object")),
-	Match.when("DateTime", () => factory.createCallExpression(
-		factory.createIdentifier("identity"),
-		undefined,
-		[factory.createCallExpression(
-			factory.createPropertyAccessExpression(
-				factory.createPropertyAccessExpression(
-					factory.createIdentifier("faker"),
-					factory.createIdentifier("date")
-				),
-				factory.createIdentifier("anytime")
-			),
-			undefined,
-			[]
-		)]
-	)
-	),
+	Match.when("DateTime", () => dateAst),
 	Match.when("Decimal", () => factory.createIdentifier("Number")),
 	Match.when("Bytes", () => factory.createIdentifier("Object")), // hmm... :( ??????
 	Match.exhaustive
@@ -147,7 +154,11 @@ const fieldAst = (field: DataModelField) => {
 			fieldAst = factory.createIdentifier(ref.name)
 		}
 		if (isDataModel(ref)) {
-			fieldAst = factory.createCallExpression(
+			fieldAst = type.array ? factory.createCallExpression(
+				factory.createIdentifier("manyOf"),
+				undefined,
+				[factory.createStringLiteral(ref.name)]
+			) : factory.createCallExpression(
 				factory.createIdentifier("oneOf"),
 				undefined,
 				[factory.createStringLiteral(ref.name)]
