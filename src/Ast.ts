@@ -111,7 +111,22 @@ export const builtInTypeAst = Match.type<BuiltinType>().pipe(
 	Match.when("Float", () => factory.createIdentifier("Number")),
 	Match.when("String", () => factory.createIdentifier("String")),
 	Match.when("Json", () => factory.createIdentifier("Object")),
-	Match.when("DateTime", () => factory.createIdentifier("Date")),
+	Match.when("DateTime", () => factory.createCallExpression(
+		factory.createIdentifier("identity"),
+		undefined,
+		[factory.createCallExpression(
+			factory.createPropertyAccessExpression(
+				factory.createPropertyAccessExpression(
+					factory.createIdentifier("faker"),
+					factory.createIdentifier("date")
+				),
+				factory.createIdentifier("anytime")
+			),
+			undefined,
+			[]
+		)]
+	)
+	),
 	Match.when("Decimal", () => factory.createIdentifier("Number")),
 	Match.when("Bytes", () => factory.createIdentifier("Object")), // hmm... :( ??????
 	Match.exhaustive
