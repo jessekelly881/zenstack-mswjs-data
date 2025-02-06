@@ -43,6 +43,22 @@ const imports = [
 		),
 		factory.createStringLiteral("@mswjs/data/lib/glossary"),
 		undefined
+	),
+
+	// import { faker } from "@faker-js/faker";
+	factory.createImportDeclaration(
+		undefined,
+		factory.createImportClause(
+			false,
+			undefined,
+			factory.createNamedImports([factory.createImportSpecifier(
+				false,
+				undefined,
+				factory.createIdentifier("faker")
+			)])
+		),
+		factory.createStringLiteral("@faker-js/faker"),
+		undefined
 	)
 ]
 
