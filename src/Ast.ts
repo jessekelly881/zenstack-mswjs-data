@@ -155,8 +155,6 @@ export const builtInTypeAst = Match.type<BuiltinType>().pipe(
 	Match.exhaustive
 );
 
-// const s = () => Array.from({ length: faker.number.int() }, () => faker.lorem.sentence());
-
 /** @internal */
 const fieldAst = (field: DataModelField) => {
 	let fieldAst: ts.Expression | undefined;
